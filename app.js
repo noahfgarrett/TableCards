@@ -76,6 +76,8 @@ const state = {
   clientId: getClientId(),
   queueLoading: false,
   game: null,
+  setupNameDraft: "",
+  lobbyNameDraft: "",
   selectedPass: new Set(),
   selectedCard: null,
   pendingReceived: [],
@@ -107,6 +109,14 @@ function saveDisplayName(name) {
 function loadDisplayName() {
   const storage = globalThis.localStorage;
   return storage?.getItem("lunch-cards-display-name") || storage?.getItem("table-cards-display-name") || state.config.playerName || "Player";
+}
+
+function isEditingLobbyName() {
+  return state.screen === "lobby" && document.activeElement?.id === "lobbyPlayerName";
+}
+
+function isEditingSetupName() {
+  return state.screen === "setup" && document.activeElement?.id === "playerName";
 }
 
 function uid(prefix = "id") {
@@ -209,7 +219,8 @@ function makePlayers(count, name, difficulty, gameType) {
 function readSetupConfig() {
   const game = state.config.game;
   const meta = GAMES[game];
-  const playerName = saveDisplayName(document.querySelector("#playerName")?.value || loadDisplayName());
+  const playerName = saveDisplayName(document.querySelector("#playerName")?.value || state.setupNameDraft || loadDisplayName());
+  state.setupNameDraft = playerName;
   const requested = Number(document.querySelector("#playerCount")?.value || meta.defaultPlayers);
   const players = game === "euchre" ? 4 : clamp(requested, meta.min, meta.max);
   const difficulty = document.querySelector("#difficulty")?.value || state.config.difficulties?.[game] || state.config.difficulty;
@@ -871,6 +882,7 @@ function renderSetup() {
   const meta = GAMES[state.config.game];
   const sessions = getJoinableSessions(state.sessions);
   const selectedDifficulty = state.config.difficulties?.[state.config.game] || state.config.difficulty;
+  const setupName = state.setupNameDraft || loadDisplayName();
   return `${renderTopbar()}
   <section class="screen setup-grid">
     <div class="panel">
@@ -878,7 +890,7 @@ function renderSetup() {
       <div class="field-stack">
         <div class="field">
           <label for="playerName">Name</label>
-          <input id="playerName" value="${escapeHtml(loadDisplayName())}" autocomplete="name">
+          <input id="playerName" value="${escapeHtml(setupName)}" autocomplete="name">
         </div>
         <div class="field">
           <label for="playerCount">Seats</label>
@@ -930,6 +942,7 @@ function renderLobby() {
   const shareUrl = makeSessionShareUrl(window.location.href, lobby.code);
   const host = isHost(lobby);
   const seat = currentSeat(lobby);
+  const draftName = state.lobbyNameDraft || seat?.name || loadDisplayName();
   const readyToLaunch = canLaunchSession({ player_count: lobby.config.players, players: lobby.seats });
   return `${renderTopbar()}
   <section class="screen lobby-grid">
@@ -947,7 +960,7 @@ function renderLobby() {
         <div class="panel-title"><h2>Your Seat</h2><span class="pill">${seat ? `Seat ${seat.seat_index + 1}` : "Not seated"}</span></div>
         <div class="field">
           <label for="lobbyPlayerName">Your Name</label>
-          <input id="lobbyPlayerName" value="${escapeHtml(seat?.name || loadDisplayName())}" autocomplete="name">
+          <input id="lobbyPlayerName" value="${escapeHtml(draftName)}" autocomplete="name">
         </div>
         <div class="button-row">
           <button class="btn" data-action="save-player-name">Save Name</button>
@@ -956,6 +969,7 @@ function renderLobby() {
       </div>
       <div class="button-row">
         ${seat && lobby.status !== "playing" ? `<button class="btn" data-action="toggle-ready">${seat.is_ready ? "Mark Not Ready" : "Ready Up"}</button>` : ""}
+        ${host && lobby.status !== "playing" ? `<button class="btn primary" data-action="start-game" ${readyToLaunch ? "" : "disabled"}>Launch Table</button>` : ""}
         ${lobby.status === "playing" ? '<button class="btn primary" data-action="start-game">Open Table</button>' : ""}
         <button class="btn" data-action="refresh-lobby">Refresh</button>
         <button class="btn danger" data-action="leave-session">${seat?.is_host ? "Back To Queue" : "Leave Session"}</button>
@@ -979,7 +993,6 @@ function renderLobby() {
         <div class="button-row">
           <button class="btn" data-action="save-host-settings">Save Setup</button>
           <button class="btn" data-action="fill-cpus">Fill CPUs</button>
-          <button class="btn primary" data-action="start-game" ${readyToLaunch ? "" : "disabled"}>Launch Table</button>
         </div>
       </div>` : ""}
     </div>
@@ -1264,11 +1277,12 @@ async function refreshSessions() {
   }
   state.sessions = (lobbies || []).map(lobby => mapRemoteLobby(lobby, players.filter(player => player.lobby_id === lobby.id)));
   state.queueLoading = false;
-  if (state.screen === "setup") render();
+  if (state.screen === "setup" && !isEditingSetupName()) render();
 }
 
 async function refreshLobby(code = state.lobby?.code) {
   if (!code) return null;
+  const wasEditingName = isEditingLobbyName();
   const lobby = await loadLobbyFromSupabase(code);
   if (!lobby) return null;
   state.lobby = lobby;
@@ -1277,7 +1291,7 @@ async function refreshLobby(code = state.lobby?.code) {
     createGameFromLobby();
     return lobby;
   }
-  if (state.screen === "lobby") render();
+  if (state.screen === "lobby" && !wasEditingName) render();
   return lobby;
 }
 
@@ -1298,6 +1312,7 @@ async function joinLobby(code) {
   if (!code) return;
   const nameInput = document.querySelector("#lobbyPlayerName") || document.querySelector("#playerName");
   const playerName = saveDisplayName(nameInput?.value || loadDisplayName());
+  state.lobbyNameDraft = playerName;
   const lobby = await loadLobbyFromSupabase(code);
   if (!lobby) {
     toast("Session not found");
@@ -1347,6 +1362,7 @@ async function joinLobby(code) {
   if (error) {
     toast("Seat was taken. Refreshing");
   } else {
+    state.lobbyNameDraft = "";
     state.lobby.seats = state.lobby.seats.concat(optimisticSeat).sort((a, b) => a.seat_index - b.seat_index);
     render();
     toast(`Joined as ${playerName}`);
@@ -1372,6 +1388,7 @@ async function toggleReady() {
 
 async function savePlayerName() {
   const nextName = saveDisplayName(document.querySelector("#lobbyPlayerName")?.value || loadDisplayName());
+  state.lobbyNameDraft = nextName;
   const seat = currentSeat();
   if (!seat) {
     toast("Name saved");
@@ -1379,6 +1396,7 @@ async function savePlayerName() {
     return;
   }
   seat.name = nextName;
+  state.lobbyNameDraft = "";
   if (state.game?.players?.[0]?.human) state.game.players[0].name = nextName;
   render();
   const supabase = await getSupabaseClient();
@@ -1522,7 +1540,7 @@ function scheduleQueueRefresh() {
     queueTimer = setInterval(() => void refreshSessions(), 8000);
   }
   if (state.screen === "lobby") {
-    queueTimer = setInterval(() => void refreshLobby(), 4000);
+    queueTimer = setInterval(() => void refreshLobby(), 1000);
   }
 }
 
@@ -1588,8 +1606,14 @@ app.addEventListener("change", event => {
   render();
 });
 
+app.addEventListener("input", event => {
+  if (event.target.id === "playerName") state.setupNameDraft = event.target.value;
+  if (event.target.id === "lobbyPlayerName") state.lobbyNameDraft = event.target.value;
+});
+
 async function bootFromUrl() {
   state.config.playerName = loadDisplayName();
+  state.setupNameDraft = state.config.playerName;
   const params = new URLSearchParams(window.location.search);
   const hub = params.get("hub");
   if (!hub) {
