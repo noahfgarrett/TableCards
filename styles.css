@@ -27,6 +27,7 @@
 html,
 body {
   min-height: 100%;
+  overflow-x: hidden;
 }
 
 body {
@@ -56,7 +57,8 @@ button:disabled {
 
 .app-shell {
   min-height: 100vh;
-  padding: 20px;
+  min-height: 100svh;
+  padding: max(20px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
 }
 
 .topbar {
@@ -212,6 +214,7 @@ select:focus {
   background: rgba(255, 255, 255, 0.09);
   padding: 10px 14px;
   font-weight: 800;
+  touch-action: manipulation;
 }
 
 .btn.primary {
@@ -521,6 +524,8 @@ select:focus {
   min-height: 120px;
   overflow-x: auto;
   padding: 8px 2px 4px;
+  overscroll-behavior-inline: contain;
+  scrollbar-width: thin;
 }
 
 .card {
@@ -656,12 +661,12 @@ select:focus {
 
 @media (max-width: 720px) {
   :root {
-    --card-w: 58px;
-    --card-h: 86px;
+    --card-w: 54px;
+    --card-h: 80px;
   }
 
   .app-shell {
-    padding: 12px;
+    padding: max(12px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) max(14px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left));
   }
 
   .topbar,
@@ -671,28 +676,223 @@ select:focus {
     flex-direction: column;
   }
 
+  .topbar {
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .brand {
+    gap: 10px;
+  }
+
+  .mark {
+    width: 38px;
+    height: 38px;
+  }
+
+  h1 {
+    font-size: 1.72rem;
+    line-height: 1;
+  }
+
+  h2 {
+    font-size: 1.2rem;
+  }
+
+  .panel,
+  .game-card,
+  .seat-card {
+    padding: 14px;
+  }
+
+  .panel-title {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  input,
+  select,
+  .btn {
+    min-height: 46px;
+    font-size: 1rem;
+  }
+
+  .button-row {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .hub-code {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
   .status-strip {
+    position: static;
+    z-index: 1;
+    grid-column: 1 / -1;
     grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
   }
 
-  .seat {
-    width: 140px;
+  .stat {
+    min-width: 0;
+    padding: 8px 9px;
+  }
+
+  .stat strong {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .table {
+    order: 1;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: stretch;
+    gap: 8px;
+    min-height: auto;
+    padding: 10px;
+    overflow: visible;
+    border-radius: 14px;
+  }
+
+  .table::before {
+    inset: 8px;
+    border-radius: 12px;
+  }
+
+  .table .seat {
+    position: relative;
+    z-index: 2;
+    left: auto;
+    right: auto;
+    top: auto;
+    bottom: auto;
+    width: auto;
+    min-width: 0;
+    padding: 8px;
     font-size: 0.86rem;
+    transform: none;
   }
 
-  .seat.pos-left,
-  .seat.pos-right {
-    top: 38%;
+  .table .seat.pos-bottom,
+  .table .seat.pos-top,
+  .table .seat.pos-left,
+  .table .seat.pos-right,
+  .table .seat.pos-top-left,
+  .table .seat.pos-top-right,
+  .table .seat.pos-bottom-left,
+  .table .seat.pos-bottom-right {
+    left: auto;
+    right: auto;
+    top: auto;
+    bottom: auto;
+    transform: none;
   }
 
-  .seat.pos-top-left,
-  .seat.pos-top-right,
-  .seat.pos-bottom-left,
-  .seat.pos-bottom-right {
-    display: none;
+  .table .seat strong {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .trick-zone {
+    position: static;
+    z-index: 2;
+    grid-column: 1 / -1;
     grid-template-columns: repeat(2, var(--card-w));
+    justify-content: center;
+    min-height: 108px;
+    padding: 8px 0;
+    transform: none;
+  }
+
+  .hand-zone {
+    position: static;
+    z-index: 3;
+    grid-column: 1 / -1;
+    padding: 10px;
+  }
+
+  .hand-toolbar {
+    gap: 8px;
+  }
+
+  .hand {
+    min-height: 96px;
+    padding-bottom: 8px;
+  }
+
+  .side-panel {
+    order: 2;
+  }
+
+  .card {
+    border-radius: 7px;
+  }
+
+  .card-rank {
+    top: 6px;
+    left: 6px;
+  }
+
+  .card-suit {
+    right: 6px;
+    bottom: 4px;
+    font-size: 1.08rem;
+  }
+
+  .card-center {
+    font-size: 1.78rem;
+  }
+
+  .action-panel {
+    inset: auto max(10px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left));
+    max-height: min(72vh, 520px);
+    overflow: auto;
+    padding: 12px;
+  }
+
+  .toast {
+    right: max(10px, env(safe-area-inset-right));
+    bottom: max(10px, env(safe-area-inset-bottom));
+    left: max(10px, env(safe-area-inset-left));
+    max-width: none;
+  }
+}
+
+@media (max-width: 420px) {
+  :root {
+    --card-w: 50px;
+    --card-h: 74px;
+  }
+
+  .status-strip,
+  .table {
+    gap: 7px;
+  }
+
+  .stat span,
+  .field label,
+  .label {
+    font-size: 0.68rem;
+  }
+
+  .seat {
+    font-size: 0.78rem;
+  }
+
+  .seat-meta {
+    font-size: 0.74rem;
+  }
+
+  .mini-card {
+    width: 12px;
+    height: 18px;
   }
 }

@@ -1332,23 +1332,51 @@ async function fillCpuSeats() {
     toast("All seats are filled");
     return;
   }
-  const supabase = await getSupabaseClient();
-  await supabase.from("table_cards_players").insert(open.map(index => ({
-    lobby_id: lobby.backendId,
+  const cpuSeats = open.map(index => ({
+    id: uid("player"),
     client_id: `cpu-${lobby.code}-${index}`,
     name: `CPU ${index}`,
+    human: false,
+    cpu: true,
+    difficulty: lobby.config.difficulty,
+    total: 0,
+    hand: [],
+    taken: [],
+    tricks: 0,
+    bid: null,
+    team: lobby.config.game === "euchre" ? index % 2 : lobby.config.players % 2 === 0 && lobby.config.game === "spades" ? index % 2 : index,
     seat_index: index,
-    is_cpu: true,
     is_host: false,
-    is_ready: true,
-    difficulty: document.querySelector("#difficulty")?.value || state.config.difficulty
-  })));
+    is_ready: true
+  }));
+  const supabase = await getSupabaseClient();
+  let synced = false;
+  if (supabase && lobby.backendId) {
+    const { error } = await supabase.from("table_cards_players").insert(cpuSeats.map(seat => ({
+      lobby_id: lobby.backendId,
+      client_id: seat.client_id,
+      name: seat.name,
+      seat_index: seat.seat_index,
+      is_cpu: true,
+      is_host: false,
+      is_ready: true,
+      difficulty: seat.difficulty
+    })));
+    synced = !error;
+    if (error) console.warn("CPU seat sync failed", error);
+  }
+  if (!synced) {
+    lobby.seats = lobby.seats.concat(cpuSeats);
+    render();
+    toast("CPU seats filled locally");
+    return;
+  }
   await refreshLobby();
   await refreshSessions();
 }
 
 async function launchLobby() {
-  const lobby = await refreshLobby();
+  const lobby = await refreshLobby() || state.lobby;
   if (lobby?.status === "playing") {
     createGameFromLobby();
     return;
