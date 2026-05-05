@@ -20,6 +20,6 @@ assert.equal(describeSessionStatus(sessions[0]), "2/4 seated · Hearts · Lobby"
 assert.equal(describeSessionStatus(sessions[1]), "3/4 seated · Spades · In progress");
 assert.equal(canLaunchSession({ player_count: 4, players: [{}, {}, {}, {}] }), true);
 assert.equal(canLaunchSession({ player_count: 4, players: [{}, {}, {}] }), false);
-assert.equal(makeSessionShareUrl("https://noahfgarrett.github.io/TableCards/?x=1", "ALPHA"), "https://noahfgarrett.github.io/TableCards/?x=1&hub=ALPHA");
+assert.equal(makeSessionShareUrl("https://noahfgarrett.github.io/LunchCards/?x=1", "ALPHA"), "https://noahfgarrett.github.io/LunchCards/?x=1&hub=ALPHA");
 
 console.log("queue-state tests passed");

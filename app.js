@@ -86,24 +86,27 @@ let supabaseClientPromise = null;
 let queueTimer = null;
 
 function getClientId() {
-  const key = "table-cards-client-id";
+  const legacyKey = "table-cards-client-id";
+  const key = "lunch-cards-client-id";
   const storage = globalThis.localStorage;
   const existing = storage?.getItem(key);
   if (existing) return existing;
-  const next = globalThis.crypto?.randomUUID ? crypto.randomUUID() : uid("client");
+  const legacy = storage?.getItem(legacyKey);
+  const next = legacy || (globalThis.crypto?.randomUUID ? crypto.randomUUID() : uid("client"));
   storage?.setItem(key, next);
   return next;
 }
 
 function saveDisplayName(name) {
   const next = name.trim() || "Player";
-  globalThis.localStorage?.setItem("table-cards-display-name", next);
+  globalThis.localStorage?.setItem("lunch-cards-display-name", next);
   state.config.playerName = next;
   return next;
 }
 
 function loadDisplayName() {
-  return globalThis.localStorage?.getItem("table-cards-display-name") || state.config.playerName || "Player";
+  const storage = globalThis.localStorage;
+  return storage?.getItem("lunch-cards-display-name") || storage?.getItem("table-cards-display-name") || state.config.playerName || "Player";
 }
 
 function uid(prefix = "id") {
@@ -851,9 +854,9 @@ function escapeHtml(value) {
 function renderTopbar() {
   return `<header class="topbar">
     <div class="brand">
-      <div class="mark">TC</div>
+      <div class="mark">LC</div>
       <div>
-        <h1>Table Cards</h1>
+        <h1>Lunch Cards</h1>
         <p class="subtle">Hearts, Spades, Euchre</p>
       </div>
     </div>
@@ -1129,7 +1132,7 @@ function toast(message) {
 }
 
 async function getSupabaseClient() {
-  const config = window.TABLE_CARDS_SUPABASE;
+  const config = window.LUNCH_CARDS_SUPABASE || window.TABLE_CARDS_SUPABASE;
   if (!config?.url || !config?.publishableKey) return null;
   if (!supabaseClientPromise) {
     supabaseClientPromise = import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm")

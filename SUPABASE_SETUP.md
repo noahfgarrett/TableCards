@@ -1,8 +1,8 @@
-# Table Cards Supabase Setup
+# Lunch Cards Supabase Setup
 
 The app is static and can run on GitHub Pages without secrets. The active Supabase backend is:
 
-- Project name: `TableCards`
+- Existing Supabase project name: `TableCards` (unchanged)
 - Project ref: `gustsojyrpbbxptcbykg`
 - Project URL: `https://gustsojyrpbbxptcbykg.supabase.co`
 - Publishable key: `sb_publishable_vZUqrwPhSu46PUmrMw-EKg_XfuMGqbs`
@@ -17,7 +17,7 @@ Supabase docs checked for this setup:
 
 - `lobbies` stores lobby metadata and the join code.
 - `lobby_players` stores seats.
-- Realtime Presence tracks who is currently connected to `table-cards:<lobby-code>`.
+- Realtime Presence can track who is currently connected to `lunch-cards:<lobby-code>`.
 - Realtime Broadcast sends low-latency game events after the host validates each move.
 
 ## Browser Config
@@ -26,7 +26,7 @@ This config is already present before `app.js` in `index.html`:
 
 ```html
 <script>
-  window.TABLE_CARDS_SUPABASE = {
+  window.LUNCH_CARDS_SUPABASE = {
     url: "https://gustsojyrpbbxptcbykg.supabase.co",
     publishableKey: "sb_publishable_vZUqrwPhSu46PUmrMw-EKg_XfuMGqbs"
   };

@@ -1,8 +1,8 @@
-# TableCards Multiplayer Queue Implementation Plan
+# LunchCards Multiplayer Queue Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Publish TableCards to GitHub Pages at `/TableCards/` and add a Supabase-backed coworker session queue with host launch controls.
+**Goal:** Publish LunchCards to GitHub Pages at `/LunchCards/` and add a Supabase-backed coworker session queue with host launch controls.
 
 **Architecture:** Keep the app as a static GitHub Pages PWA. Supabase stores lobby/session records, seats, ready state, and launch events; the browser polls/lightly subscribes and reconciles local UI state. The game table still runs locally for this pass, but launched sessions move all joined clients into the correct game shell.
 
@@ -47,10 +47,10 @@
 ### Task 4: Publish
 
 **Files:**
-- GitHub repo: `noahfgarrett/TableCards`
+- GitHub repo: `noahfgarrett/LunchCards`
 
-- [ ] Create or update a clean `TableCards` GitHub repo.
+- [ ] Create or update a clean `LunchCards` GitHub repo.
 - [ ] Copy static app files into the repo root.
 - [ ] Commit and push.
 - [ ] Enable GitHub Pages from `main` branch root.
-- [ ] Verify `https://noahfgarrett.github.io/TableCards/`.
+- [ ] Verify `https://noahfgarrett.github.io/LunchCards/`.
